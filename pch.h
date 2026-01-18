@@ -55,6 +55,27 @@
 #include <dxgidebug.h>
 #endif
 
+// Direct X Toolkit
+#include <directxtk/BufferHelpers.h>
+#include <directxtk/CommonStates.h>
+#include <directxtk/DDSTextureLoader.h>
+#include <directxtk/DirectXHelpers.h>
+#include <directxtk/Effects.h>
+#include <directxtk/GamePad.h>
+#include <directxtk/GeometricPrimitive.h>
+#include <directxtk/GraphicsMemory.h>
+#include <directxtk/Keyboard.h>
+#include <directxtk/Model.h>
+#include <directxtk/Mouse.h>
+#include <directxtk/PostProcess.h>
+#include <directxtk/PrimitiveBatch.h>
+#include <directxtk/ScreenGrab.h>
+#include <directxtk/SimpleMath.h>
+#include <directxtk/SpriteBatch.h>
+#include <directxtk/SpriteFont.h>
+#include <directxtk/VertexTypes.h>
+#include <directxtk/WICTextureLoader.h>
+
 namespace DX
 {
     // Helper class for COM exceptions
