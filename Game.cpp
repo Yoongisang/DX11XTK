@@ -78,15 +78,18 @@ void Game::Render()
 
     // TODO: Add your rendering code here.
     context;
-    // 추가
-    m_spriteBatch->Begin();
-
-    m_spriteBatch->Draw(m_texture.Get(), m_screenPos, nullptr,
-        Colors::White, 0.f, m_origin);
-
-    m_spriteBatch->End();
 
     m_deviceResources->PIXEndEvent();
+
+    // SpriteBatc를 사용한 2D 렌더링 시작
+    m_spriteBatch->Begin();
+    // 배경 이미지를 전체 화면 크기로 그리기
+    m_spriteBatch->Draw(m_background.Get(), m_fullscreenRect);
+    // 고양이 텍스처를 화면 중앙에 그리기(원점을 이미지 중심으로 설정)
+    m_spriteBatch->Draw(m_texture.Get(), m_screenPos, nullptr,
+        Colors::White, 0.f, m_origin);
+    // 렌더링 종료 및 GPU에 제출
+    m_spriteBatch->End();
 
     // Show the new frame.
     m_deviceResources->Present();
@@ -177,23 +180,30 @@ void Game::CreateDeviceDependentResources()
     // TODO: Initialize device dependent objects here (independent of window size).
     device;
     // 추가
+    // SpriteBatch 생성(2D 스프라이트 렌더링용)
     auto context = m_deviceResources->GetD3DDeviceContext();
     m_spriteBatch = std::make_unique<SpriteBatch>(context);
-
+    // cat.dds 텍스쳐 파일 로드
     ComPtr<ID3D11Resource> resource;
     DX::ThrowIfFailed(
-        CreateWICTextureFromFile(device, L"cat.png",
+        CreateDDSTextureFromFile(device, L"cat.dds",
             resource.GetAddressOf(),
             m_texture.ReleaseAndGetAddressOf()));
-
+    // 텍스처 정보를 얻기 위해 ID3D11Texture2D로 캐스팅
     ComPtr<ID3D11Texture2D> cat;
     DX::ThrowIfFailed(resource.As(&cat));
-
+    // 텍스처 크기 정보 가져오기
     CD3D11_TEXTURE2D_DESC catDesc;
     cat->GetDesc(&catDesc);
-
+    // 원점을 텍스처 중심으로 설정(회전/위치 지정시 중심 기준으로 동작)
     m_origin.x = float(catDesc.Width / 2);
     m_origin.y = float(catDesc.Height / 2);
+    // CommonStates 생성(상태 객체 모음): 알파모드 떄문에 추가했으나 DDS사용으로 불필요해짐
+    //m_states = std::make_unique<CommonStates>(device);
+    // 배경이미지 로드
+    DX::ThrowIfFailed(
+        CreateWICTextureFromFile(device, L"sunset.jpg", nullptr,
+            m_background.ReleaseAndGetAddressOf()));
 }
 
 // Allocate all memory resources that change on a window SizeChanged event.
@@ -201,17 +211,30 @@ void Game::CreateWindowSizeDependentResources()
 {
     // TODO: Initialize windows-size dependent objects here.
     // 추가
+    // 현재 윈도우 크기 가져오기
     auto size = m_deviceResources->GetOutputSize();
+    // 화면 중앙 좌표 계산(고양이 텍스처 위치)
     m_screenPos.x = float(size.right) / 2.f;
     m_screenPos.y = float(size.bottom) / 2.f;
+    // 화면 중앙에 절반 크기로 그릴 영역 계산(타일형태로 배치할때 사용)
+    //m_stretchRect.left = size.right / 4;
+    //m_stretchRect.top = size.bottom / 4;
+    //m_stretchRect.right = m_stretchRect.left + size.right / 2;
+    //m_stretchRect.bottom = m_stretchRect.top + size.bottom / 2;
+    // 전체 화면 영역 저장(배경 이미지용)
+    m_fullscreenRect = m_deviceResources->GetOutputSize();
 }
 
 void Game::OnDeviceLost()
 {
     // TODO: Add Direct3D resource cleanup here.
     // 추가
+    // 디바이스 손실 시 모든 GPU 리소스 해제
     m_texture.Reset();
     m_spriteBatch.reset();
+    m_states.reset();
+    m_background.Reset();
+
 }
 
 void Game::OnDeviceRestored()
