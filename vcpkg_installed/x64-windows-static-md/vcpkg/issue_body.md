@@ -28,7 +28,8 @@ Package: directxmath:x64-windows-static-md@2025-04-03
 {
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
   "dependencies": [
-    "directxmath"
+    "directxmath",
+    "directxtk"
   ]
 }
 
