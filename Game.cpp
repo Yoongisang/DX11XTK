@@ -10,6 +10,7 @@ extern void ExitGame() noexcept;
 using namespace DirectX;
 
 using Microsoft::WRL::ComPtr;
+using namespace DirectX::SimpleMath;
 
 Game::Game() noexcept(false)
 {
