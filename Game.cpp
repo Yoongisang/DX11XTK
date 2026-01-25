@@ -59,6 +59,11 @@ void Game::Update(DX::StepTimer const& timer)
 
     // TODO: Add your game logic here.
     elapsedTime;
+    // 추가 
+    // 우주선
+    m_ship->Update(elapsedTime);
+    // 배경
+    m_stars->Update(elapsedTime * 500);
 }
 #pragma endregion
 
@@ -79,9 +84,21 @@ void Game::Render()
 
     // TODO: Add your rendering code here.
     context;
+    // 추가 
+    m_spriteBatch->Begin();
+    // 배경
+    m_stars->Draw(m_spriteBatch.get());
+    // 우주선
+    m_ship->Draw(m_spriteBatch.get(), m_shipPos);
+    m_ship->Draw(m_spriteBatch.get(), m_shipPos / 2);
+
+    m_spriteBatch->End();
 
     m_deviceResources->PIXEndEvent();
     m_deviceResources->Present();
+   
+
+
 }
 
 // Helper method to clear the back buffers.
@@ -168,17 +185,50 @@ void Game::CreateDeviceDependentResources()
 
     // TODO: Initialize device dependent objects here (independent of window size).
     device;
+    // 추가
+    // 우주선
+    auto context = m_deviceResources->GetD3DDeviceContext();
+    m_spriteBatch = std::make_unique<SpriteBatch>(context);
+
+    DX::ThrowIfFailed(CreateWICTextureFromFile(device, L"shipanimated.png",
+        nullptr, m_texture.ReleaseAndGetAddressOf()));
+
+    m_ship = std::make_unique<AnimatedTexture>();
+    m_ship->Load(m_texture.Get(), 4, 20);
+
+    // 배경
+    DX::ThrowIfFailed(CreateWICTextureFromFile(device, L"starfield.png",
+        nullptr, m_backgroundTex.ReleaseAndGetAddressOf()));
+   
+    m_stars = std::make_unique<ScrollingBackground>();
+    m_stars->Load(m_backgroundTex.Get());
 }
 
 // Allocate all memory resources that change on a window SizeChanged event.
 void Game::CreateWindowSizeDependentResources()
 {
     // TODO: Initialize windows-size dependent objects here.
+    // 추가
+    // 우주선 사이즈과 위치
+    auto size = m_deviceResources->GetOutputSize();
+    m_shipPos.x = float(size.right / 2);
+    m_shipPos.y = float((size.bottom / 2) + (size.bottom / 4));
+
+    // 배경 사이즈
+    m_stars->SetWindow(size.right, size.bottom);
 }
 
 void Game::OnDeviceLost()
 {
     // TODO: Add Direct3D resource cleanup here.
+    // 추가 
+    // 우주선
+    m_ship.reset();
+    m_spriteBatch.reset();
+    m_texture.Reset();
+    // 베경
+    m_stars.reset();
+    m_backgroundTex.Reset();
 }
 
 void Game::OnDeviceRestored()
