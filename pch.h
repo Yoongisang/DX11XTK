@@ -50,7 +50,8 @@
 #include <stdexcept>
 #include <system_error>
 #include <tuple>
-
+// 추가
+#include <string>
 
 #ifdef _DEBUG
 #include <dxgidebug.h>
