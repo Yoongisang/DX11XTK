@@ -53,5 +53,6 @@
     <None Include="vcpkg-configuration.json" />
     <None Include="vcpkg.json" />
     <None Include="myfile.spritefont" />
+    <None Include="korean_font.spritefont" />
   </ItemGroup>
 </Project>

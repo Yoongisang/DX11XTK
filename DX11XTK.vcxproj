@@ -139,6 +139,7 @@
     <Manifest Include="settings.manifest" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="korean_font.spritefont" />
     <None Include="myfile.spritefont" />
     <None Include="vcpkg-configuration.json" />
     <None Include="vcpkg.json" />

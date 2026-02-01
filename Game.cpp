@@ -216,6 +216,7 @@ void Game::OnDeviceLost()
     // TODO: Add Direct3D resource cleanup here.
     // 추가
     m_font.reset();
+    m_spriteBatch.reset();
 }
 
 void Game::OnDeviceRestored()
