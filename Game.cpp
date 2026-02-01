@@ -87,6 +87,11 @@ void Game::Render()
     std::wstring output = converter.from_bytes(ascii);
     // 텍스트의 기준점 계산(string으로 다루기)
     Vector2 origin = m_font->MeasureString(output.c_str()) / 2.f;
+    m_font->DrawString(m_spriteBatch.get(), output.c_str(),
+        m_fontPos + Vector2(1.f, 1.f), Colors::Black, 0.f, origin);
+    m_font->DrawString(m_spriteBatch.get(), output.c_str(),
+        m_fontPos + Vector2(-1.f, 1.f), Colors::Black, 0.f, origin);
+
     // 텍스트 그리기(SpriteBatch, 텍스트, 위치, 색상, 회전 각도, 기준점) - string으로 다루기
     m_font->DrawString(m_spriteBatch.get(), output.c_str(),
         m_fontPos, Colors::White, 0.f, origin);
