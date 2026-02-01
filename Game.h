@@ -66,4 +66,8 @@ private:
     // 추가
     // 폰트
     std::unique_ptr<DirectX::SpriteFont> m_font;
+    // 폰트 좌표
+    DirectX::SimpleMath::Vector2 m_fontPos;
+    // 스프라이트 그리기
+    std::unique_ptr<DirectX::SpriteBatch> m_spriteBatch;
 };

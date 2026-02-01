@@ -78,7 +78,18 @@ void Game::Render()
     auto context = m_deviceResources->GetD3DDeviceContext();
 
     // TODO: Add your rendering code here.
-    context;
+    // 추가 
+    // 2D Sprite 그리기 시작
+    m_spriteBatch->Begin();
+    // 그릴 텍스트 
+    const wchar_t* output = L"Hello World";
+    // 텍스트의 기준점 계산
+    Vector2 origin = m_font->MeasureString(output) / 2.f;
+    // 텍스트 그리기(SpriteBatch, 텍스트, 위치, 색상, 회전 각도, 기준점)
+    m_font->DrawString(m_spriteBatch.get(), output,
+        m_fontPos, Colors::White, 0.f, origin);
+    // 종료
+    m_spriteBatch->End();
 
     m_deviceResources->PIXEndEvent();
     m_deviceResources->Present();
@@ -168,13 +179,23 @@ void Game::CreateDeviceDependentResources()
 
     // TODO: Initialize device dependent objects here (independent of window size).
     //추가 
+    // m_font에 생성했던 폰트 파일 할당
     m_font = std::make_unique<SpriteFont>(device, L"myfile.spritefont");
+    // Device Context 가져오기
+    auto context = m_deviceResources->GetD3DDeviceContext();
+    // SpritBatch 생성
+    m_spriteBatch = std::make_unique<SpriteBatch>(context);
 }
 
 // Allocate all memory resources that change on a window SizeChanged event.
 void Game::CreateWindowSizeDependentResources()
 {
     // TODO: Initialize windows-size dependent objects here.
+    // Window 사이즈 받아오기
+    auto size = m_deviceResources->GetOutputSize();
+    // 좌표 계산(화면 중앙)
+    m_fontPos.x = float(size.right) / 2.f;
+    m_fontPos.y = float(size.bottom) / 2.f;
 }
 
 void Game::OnDeviceLost()
