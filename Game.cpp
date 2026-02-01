@@ -167,7 +167,8 @@ void Game::CreateDeviceDependentResources()
     auto device = m_deviceResources->GetD3DDevice();
 
     // TODO: Initialize device dependent objects here (independent of window size).
-    device;
+    //추가 
+    m_font = std::make_unique<SpriteFont>(device, L"myfile.spritefont");
 }
 
 // Allocate all memory resources that change on a window SizeChanged event.
@@ -179,6 +180,8 @@ void Game::CreateWindowSizeDependentResources()
 void Game::OnDeviceLost()
 {
     // TODO: Add Direct3D resource cleanup here.
+    // 추가
+    m_font.reset();
 }
 
 void Game::OnDeviceRestored()

@@ -62,4 +62,8 @@ private:
 
     // Rendering loop timer.
     DX::StepTimer                           m_timer;
+
+    // 추가
+    // 폰트
+    std::unique_ptr<DirectX::SpriteFont> m_font;
 };
