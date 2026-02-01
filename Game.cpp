@@ -81,8 +81,10 @@ void Game::Render()
     // 추가 
     // 2D Sprite 그리기 시작
     m_spriteBatch->Begin();
-    // 그릴 텍스트(string으로 받아서 문장끼리 더하는 문자열 다루기 가능) 
-    std::wstring output = std::wstring(L"Hello") + std::wstring(L" World");
+    // 그릴 텍스트(ASCII 텍스트 사용) 
+    const char* ascii = "Hello World";
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+    std::wstring output = converter.from_bytes(ascii);
     // 텍스트의 기준점 계산(string으로 다루기)
     Vector2 origin = m_font->MeasureString(output.c_str()) / 2.f;
     // 텍스트 그리기(SpriteBatch, 텍스트, 위치, 색상, 회전 각도, 기준점) - string으로 다루기

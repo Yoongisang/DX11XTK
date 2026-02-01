@@ -52,6 +52,8 @@
 #include <tuple>
 // 추가
 #include <string>
+#include <codecvt>
+#include <locale>
 
 #ifdef _DEBUG
 #include <dxgidebug.h>
