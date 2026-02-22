@@ -12,9 +12,20 @@ using namespace DirectX;
 using Microsoft::WRL::ComPtr;
 using namespace DirectX::SimpleMath;
 
+namespace
+{
+    // 4x MSAA (픽셀당 4샘플)
+    constexpr UINT MSAA_COUNT = 4;
+    // 품질 레벨 0 (기본값)
+    constexpr UINT MSAA_QUALITY = 0;
+}
+
 Game::Game() noexcept(false)
 {
-    m_deviceResources = std::make_unique<DX::DeviceResources>();
+    m_deviceResources = std::make_unique<DX::DeviceResources>(
+        DXGI_FORMAT_B8G8R8A8_UNORM,
+        DXGI_FORMAT_UNKNOWN // 깊이 버퍼 생성안함
+   );
     // TODO: Provide parameters for swapchain format, depth/stencil format, and backbuffer count.
     //   Add DX::DeviceResources::c_AllowTearing to opt-in to variable rate displays.
     //   Add DX::DeviceResources::c_EnableHDR for HDR10 display.
@@ -131,7 +142,15 @@ void Game::Render()
 
     m_batch->End();
 
-    m_deviceResources->PIXEndEvent();
+    // ... m_batch->End(); 다음
+
+// MSAA 렌더 타겟 → 백버퍼로 Resolve (4샘플 → 1샘플 다운샘플)
+    context->ResolveSubresource(
+        m_deviceResources->GetRenderTarget(), 0,  // 목적지: 백버퍼
+        m_offscreenRenderTarget.Get(), 0,         // 소스: MSAA 오프스크린 버퍼
+        m_deviceResources->GetBackBufferFormat()
+    );
+
     m_deviceResources->Present();
 }
 
@@ -142,8 +161,11 @@ void Game::Clear()
 
     // Clear the views.
     auto context = m_deviceResources->GetD3DDeviceContext();
-    auto renderTarget = m_deviceResources->GetRenderTargetView();
-    auto depthStencil = m_deviceResources->GetDepthStencilView();
+    // 수정
+    // 기존: DeviceResources 기본 RTV/DSV
+    // 변경: MSAA 전용 RTV/DSV로 교체
+    auto renderTarget = m_offscreenRenderTargetSRV.Get();
+    auto depthStencil = m_depthStencilSRV.Get();
 
     context->ClearRenderTargetView(renderTarget, Colors::CornflowerBlue);
     context->ClearDepthStencilView(depthStencil, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
@@ -227,7 +249,7 @@ void Game::CreateDeviceDependentResources()
     // 텍스처 대신정점별 색상 사용
     m_effect->SetVertexColorEnabled(true);
 
-    // AntialiasedLineEnable=TRUE, MultisampleEnable=FALSE → 선 전용 AA
+    // MultisampleEnable=TRUE, AntialiasedLineEnable=FALSE → MSAA 모드
     CD3D11_RASTERIZER_DESC rastDesc(
         D3D11_FILL_SOLID,
         D3D11_CULL_NONE,
@@ -237,8 +259,8 @@ void Game::CreateDeviceDependentResources()
         D3D11_DEFAULT_SLOPE_SCALED_DEPTH_BIAS,
         TRUE,  // DepthClipEnable
         FALSE, // ScissorEnable
-        FALSE, // MultisampleEnable ← FALSE
-        TRUE   // AntialiasedLineEnable ← TRUE
+        TRUE, // MultisampleEnable ← TRUE
+        FALSE   // AntialiasedLineEnable ← FALSE
     );
 
     DX::ThrowIfFailed(device->CreateRasterizerState(&rastDesc,
@@ -259,6 +281,42 @@ void Game::CreateWindowSizeDependentResources()
     // TODO: Initialize windows-size dependent objects here.
     // 추가 
     auto size = m_deviceResources->GetOutputSize();
+    auto device = m_deviceResources->GetD3DDevice();
+    auto width = static_cast<UINT>(size.right);
+    auto height = static_cast<UINT>(size.bottom);
+
+    // MSAA 렌더 타겟 텍스처 생성
+    CD3D11_TEXTURE2D_DESC rtDesc(
+        m_deviceResources->GetBackBufferFormat(),
+        width, height, 1, 1,
+        D3D11_BIND_RENDER_TARGET,
+        D3D11_USAGE_DEFAULT, 0,
+        MSAA_COUNT, MSAA_QUALITY  // ← 멀티샘플 설정
+    );
+    DX::ThrowIfFailed(device->CreateTexture2D(&rtDesc, nullptr,
+        m_offscreenRenderTarget.ReleaseAndGetAddressOf()));
+
+    // 렌더 타겟 뷰 (TEXTURE2DMS = 멀티샘플 텍스처용 차원)
+    CD3D11_RENDER_TARGET_VIEW_DESC rtvDesc(D3D11_RTV_DIMENSION_TEXTURE2DMS);
+    DX::ThrowIfFailed(device->CreateRenderTargetView(m_offscreenRenderTarget.Get(),
+        &rtvDesc, m_offscreenRenderTargetSRV.ReleaseAndGetAddressOf()));
+
+    // MSAA 깊이/스텐실 버퍼 생성
+    // ※ Feature Level 9.x 장치는 DXGI_FORMAT_D24_UNORM_S8_UINT 사용
+    CD3D11_TEXTURE2D_DESC dsDesc(
+        DXGI_FORMAT_D32_FLOAT,
+        width, height, 1, 1,
+        D3D11_BIND_DEPTH_STENCIL,
+        D3D11_USAGE_DEFAULT, 0,
+        MSAA_COUNT, MSAA_QUALITY
+    );
+    ComPtr<ID3D11Texture2D> depthBuffer;
+    DX::ThrowIfFailed(device->CreateTexture2D(&dsDesc, nullptr, depthBuffer.GetAddressOf()));
+
+    CD3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc(D3D11_DSV_DIMENSION_TEXTURE2DMS);
+    DX::ThrowIfFailed(device->CreateDepthStencilView(depthBuffer.Get(),
+        &dsvDesc, m_depthStencilSRV.ReleaseAndGetAddressOf()));
+
     // 카메라: (2,2,2) 위치에서 원점(0,0,0)을 바라봄, Y촉이 위쪽
     m_view = Matrix::CreateLookAt(Vector3(2.f, 2.f, 2.f), 
         Vector3::Zero, Vector3::UnitY);
@@ -280,6 +338,9 @@ void Game::OnDeviceLost()
     m_batch.reset();
     m_inputLayout.Reset();
     m_raster.Reset();
+    m_offscreenRenderTarget.Reset();
+    m_offscreenRenderTargetSRV.Reset();
+    m_depthStencilSRV.Reset();
 }
 
 void Game::OnDeviceRestored()

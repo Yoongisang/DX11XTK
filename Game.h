@@ -72,7 +72,13 @@ private:
     // 정점 레이아웃
     Microsoft::WRL::ComPtr<ID3D11InputLayout> m_inputLayout;
     // 커스텀 래스터라이저 상태
-    Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_raster;      
+    Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_raster;    
+    // MSAA 렌더 타겟 텍스처
+    Microsoft::WRL::ComPtr<ID3D11Texture2D>        m_offscreenRenderTarget;
+    // 렌더 타겟 뷰
+    Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_offscreenRenderTargetSRV;
+    // 깊이/스텐실 뷰
+    Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_depthStencilSRV;
     // 오브젝트 변환 행렬
     DirectX::SimpleMath::Matrix m_world;
     //카메라 변환 행렬
