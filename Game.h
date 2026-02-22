@@ -71,6 +71,8 @@ private:
     std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>> m_batch;
     // 정점 레이아웃
     Microsoft::WRL::ComPtr<ID3D11InputLayout> m_inputLayout;
+    // 커스텀 래스터라이저 상태
+    Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_raster;      
     // 오브젝트 변환 행렬
     DirectX::SimpleMath::Matrix m_world;
     //카메라 변환 행렬

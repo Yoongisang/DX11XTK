@@ -58,7 +58,9 @@ void Game::Update(DX::StepTimer const& timer)
     float elapsedTime = float(timer.GetElapsedSeconds());
 
     // TODO: Add your game logic here.
-    elapsedTime;
+    // 추가
+    // Y축 기준으로 회전 추가
+    m_world = Matrix::CreateRotationY(cosf(static_cast<float>(timer.GetTotalSeconds())));
 }
 #pragma endregion
 
@@ -84,7 +86,7 @@ void Game::Render()
     // 깊이 테스트 없음
     context->OMSetDepthStencilState(m_states->DepthNone(), 0);
     // 양면 그리기
-    context->RSSetState(m_states->CullNone());
+    context->RSSetState(m_raster.Get());
 
     // 매 프레임 월드 행렬 갱신
     m_effect->SetWorld(m_world);
@@ -224,6 +226,23 @@ void Game::CreateDeviceDependentResources()
     m_effect = std::make_unique<BasicEffect>(device);
     // 텍스처 대신정점별 색상 사용
     m_effect->SetVertexColorEnabled(true);
+
+    // AntialiasedLineEnable=TRUE, MultisampleEnable=FALSE → 선 전용 AA
+    CD3D11_RASTERIZER_DESC rastDesc(
+        D3D11_FILL_SOLID,
+        D3D11_CULL_NONE,
+        FALSE, // FrontCounterClockwise
+        D3D11_DEFAULT_DEPTH_BIAS,
+        D3D11_DEFAULT_DEPTH_BIAS_CLAMP,
+        D3D11_DEFAULT_SLOPE_SCALED_DEPTH_BIAS,
+        TRUE,  // DepthClipEnable
+        FALSE, // ScissorEnable
+        FALSE, // MultisampleEnable ← FALSE
+        TRUE   // AntialiasedLineEnable ← TRUE
+    );
+
+    DX::ThrowIfFailed(device->CreateRasterizerState(&rastDesc,
+        m_raster.ReleaseAndGetAddressOf()));
     // BasicEffect 기준으로 VertexPositionColor에 맞는 InputLayout 자동 생성
     DX::ThrowIfFailed(
         CreateInputLayoutFromEffect<VertexPositionColor>(device, m_effect.get(),
@@ -260,6 +279,7 @@ void Game::OnDeviceLost()
     m_effect.reset();
     m_batch.reset();
     m_inputLayout.Reset();
+    m_raster.Reset();
 }
 
 void Game::OnDeviceRestored()
