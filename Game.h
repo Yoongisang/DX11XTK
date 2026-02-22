@@ -62,4 +62,19 @@ private:
 
     // Rendering loop timer.
     DX::StepTimer                           m_timer;
+    // 추가
+    // 공통 렌더 상태
+    std::unique_ptr<DirectX::CommonStates> m_states;
+    // 기본 셰이더 이펙트 
+    std::unique_ptr<DirectX::BasicEffect> m_effect;
+    // PrimitiveBatch: 즉시 모드 방식으로 점/선/삼각형을 GPU에 전달하는 헬퍼
+    std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>> m_batch;
+    // 정점 레이아웃
+    Microsoft::WRL::ComPtr<ID3D11InputLayout> m_inputLayout;
+    // 오브젝트 변환 행렬
+    DirectX::SimpleMath::Matrix m_world;
+    //카메라 변환 행렬
+    DirectX::SimpleMath::Matrix m_view;
+    // 투영 변환 행렬
+    DirectX::SimpleMath::Matrix m_proj;
 };
