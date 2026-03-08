@@ -62,4 +62,11 @@ private:
 
     // Rendering loop timer.
     DX::StepTimer                           m_timer;
+    // 추가
+    // 변환 행렬
+    DirectX::SimpleMath::Matrix m_world;
+    DirectX::SimpleMath::Matrix m_view;
+    DirectX::SimpleMath::Matrix m_proj;
+    // 렌더링할 3D 기본 도형
+    std::unique_ptr<DirectX::GeometricPrimitive> m_shape;
 };
