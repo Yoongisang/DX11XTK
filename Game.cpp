@@ -176,8 +176,13 @@ void Game::CreateDeviceDependentResources()
     // 추가
     // DeviceContext 가져오기(렌더링 명령 실행)
     auto context = m_deviceResources->GetD3DDeviceContext();
-    // 구체 도형 생성 및 렌더 컨텍스트 설정
-    m_shape = GeometricPrimitive::CreateSphere(context);
+    // 다양한 도형 생성 및 렌더 컨텍스트 설정
+    m_shape = GeometricPrimitive::CreateTorus(context);
+    //m_shape = GeometricPrimitive::CreateCube(context);
+    //m_shape = GeometricPrimitive::CreateCone(context);
+    //m_shape = GeometricPrimitive::CreateCylinder(context);
+    //m_shape = GeometricPrimitive::CreateDodecahedron(context);
+    //m_shape = GeometricPrimitive::CreateTeapot(context);
     // wordl 행렬을 단위 행렬로 초기화
     m_world = Matrix::Identity;
 }
