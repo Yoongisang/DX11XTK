@@ -61,8 +61,8 @@ void Game::Update(DX::StepTimer const& timer)
     // 추가
     // 총 실행 시간 계산
     auto time = static_cast<float>(timer.GetTotalSeconds());
-    // 시간에 따른 애니메이션 로직
-    m_world = Matrix::CreateRotationZ(cosf(time) * 2.f);
+    // 시간에 따른 애니메이션 로직(Y축 기준) -> 자전효과
+    m_world = Matrix::CreateRotationY(time);
 }
 #pragma endregion
 
@@ -83,8 +83,8 @@ void Game::Render()
 
     // TODO: Add your rendering code here.
     // 추가
-    // 구체 렌더링
-    m_shape->Draw(m_world, m_view, m_proj);
+    // 구체 렌더링, 텍스처 추가
+    m_shape->Draw(m_world, m_view, m_proj, Colors::White, m_texture.Get());
 
     m_deviceResources->PIXEndEvent();
     m_deviceResources->Present();
@@ -177,14 +177,13 @@ void Game::CreateDeviceDependentResources()
     // DeviceContext 가져오기(렌더링 명령 실행)
     auto context = m_deviceResources->GetD3DDeviceContext();
     // 다양한 도형 생성 및 렌더 컨텍스트 설정
-    m_shape = GeometricPrimitive::CreateTorus(context);
-    //m_shape = GeometricPrimitive::CreateCube(context);
-    //m_shape = GeometricPrimitive::CreateCone(context);
-    //m_shape = GeometricPrimitive::CreateCylinder(context);
-    //m_shape = GeometricPrimitive::CreateDodecahedron(context);
-    //m_shape = GeometricPrimitive::CreateTeapot(context);
+    m_shape = GeometricPrimitive::CreateSphere(context);
     // wordl 행렬을 단위 행렬로 초기화
     m_world = Matrix::Identity;
+    // 텍스처 로드
+    DX::ThrowIfFailed(
+        CreateWICTextureFromFile(device, L"earth.bmp", nullptr,
+            m_texture.ReleaseAndGetAddressOf()));
 }
 
 // Allocate all memory resources that change on a window SizeChanged event.
@@ -208,6 +207,7 @@ void Game::OnDeviceLost()
     // 추가
     // Device 손실 시 리소스 해제
     m_shape.reset();
+    m_texture.Reset();
 }
 
 void Game::OnDeviceRestored()

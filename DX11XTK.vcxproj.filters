@@ -43,6 +43,9 @@
     <Image Include="sunset.jpg">
       <Filter>Assets</Filter>
     </Image>
+    <Image Include="earth.bmp">
+      <Filter>Assets</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="settings.manifest">

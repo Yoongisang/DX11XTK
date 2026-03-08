@@ -69,4 +69,6 @@ private:
     DirectX::SimpleMath::Matrix m_proj;
     // 렌더링할 3D 기본 도형
     std::unique_ptr<DirectX::GeometricPrimitive> m_shape;
+    // 텍스처 
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_texture;
 };

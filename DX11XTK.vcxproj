@@ -132,6 +132,7 @@
   <ItemGroup>
     <Image Include="cat.dds" />
     <Image Include="directx.ico" />
+    <Image Include="earth.bmp" />
     <Image Include="sunset.jpg" />
     <Image Include="x64\Debug\cat.png" />
   </ItemGroup>
