@@ -83,8 +83,10 @@ void Game::Render()
 
     // TODO: Add your rendering code here.
     // 추가
-    // 구체 렌더링, 텍스처 추가
-    m_shape->Draw(m_world, m_view, m_proj, Colors::White, m_texture.Get());
+    // 셰이더 효과에 world 행렬 바인드
+    m_effect->SetWorld(m_world);
+    // 구체 렌더링(셰이더 효과, 및 inputLayout 적용)
+    m_shape->Draw(m_effect.get(), m_inputLayout.Get());
 
     m_deviceResources->PIXEndEvent();
     m_deviceResources->Present();
@@ -176,14 +178,31 @@ void Game::CreateDeviceDependentResources()
     // 추가
     // DeviceContext 가져오기(렌더링 명령 실행)
     auto context = m_deviceResources->GetD3DDeviceContext();
-    // 다양한 도형 생성 및 렌더 컨텍스트 설정
+    // 기본효과 초기화(텍스처, 조명)
+    m_effect = std::make_unique<BasicEffect>(device);
+    m_effect->SetTextureEnabled(true);      // 텍스처 사용 활성화
+    m_effect->SetPerPixelLighting(true);    // 픽셀 단위 조명(고품질) 설정
+    m_effect->SetLightingEnabled(true);     // 조명 연산 활성화
+    // 0번 조명 설정(흰색 광원을 카메라 정면 방향에서 조사)
+    m_effect->SetLightEnabled(0, true);
+    m_effect->SetLightDiffuseColor(0, Colors::White);
+    m_effect->SetLightDirection(0, -Vector3::UnitZ);
+
+    // 수체 도형 생성 및 렌더 컨텍스트 설정
     m_shape = GeometricPrimitive::CreateSphere(context);
-    // wordl 행렬을 단위 행렬로 초기화
-    m_world = Matrix::Identity;
+    // 도형의 정점 구조와 셰이더 효과를 연결하는 InputLayout 생성
+    m_shape->CreateInputLayout(m_effect.get(),
+        m_inputLayout.ReleaseAndGetAddressOf());
+
     // 텍스처 로드
     DX::ThrowIfFailed(
         CreateWICTextureFromFile(device, L"earth.bmp", nullptr,
             m_texture.ReleaseAndGetAddressOf()));
+    // 셰이더 효과에 로드한 텍스처 바인딩
+    m_effect->SetTexture(m_texture.Get());
+
+    // world 행렬을 단위 행렬로 초기화
+    m_world = Matrix::Identity;
 }
 
 // Allocate all memory resources that change on a window SizeChanged event.
@@ -199,6 +218,10 @@ void Game::CreateWindowSizeDependentResources()
     // 투영행렬 설정 : 원근감 및 화면 비율
     m_proj = Matrix::CreatePerspectiveFieldOfView(XM_PI / 4.f,
         float(size.right) / float(size.bottom), 0.1f, 10.f);
+    // 셰이더 효과에 View시점 바인드
+    m_effect->SetView(m_view);
+    // 셰이더 효과에 원근감 및 화면 비율 바인드
+    m_effect->SetProjection(m_proj);
 }
 
 void Game::OnDeviceLost()
@@ -208,6 +231,8 @@ void Game::OnDeviceLost()
     // Device 손실 시 리소스 해제
     m_shape.reset();
     m_texture.Reset();
+    m_effect.reset();
+    m_inputLayout.Reset();
 }
 
 void Game::OnDeviceRestored()

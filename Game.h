@@ -71,4 +71,8 @@ private:
     std::unique_ptr<DirectX::GeometricPrimitive> m_shape;
     // 텍스처 
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_texture;
+    // 기본 셰이더 효과
+    std::unique_ptr<DirectX::BasicEffect> m_effect;
+    // 입력 레이아웃
+    Microsoft::WRL::ComPtr<ID3D11InputLayout> m_inputLayout;
 };
